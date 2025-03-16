@@ -1,53 +1,38 @@
-"""
-Zaawansowany system logowania z buforowaniem i rotacją plików.
-"""
-
 import logging
-from logging.handlers import RotatingFileHandler, MemoryHandler
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from datetime import datetime
-from typing import Any
-from core.utils.config_manager import ConfigManager
+from core.utils.config import load_config
+
+config = load_config()
 
 class CyberLogger:
     def __init__(self, name: str):
-        self._config = ConfigManager.get('logging')
-        self._logger = logging.getLogger(name)
-        self._logger.setLevel(self._config.get('level', 'INFO'))
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(config.get('log_level', 'INFO'))
         
-        if not self._logger.handlers:
+        if not self.logger.handlers:
             formatter = logging.Formatter(
                 fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                 datefmt="%Y-%m-%dT%H:%M:%SZ"
             )
-            formatter.converter = self._utc_time
-            
-            # Handler plikowy z rotacją
-            logs_dir = Path(self._config.get('dir', '/var/log/cyberwitness'))
+            logs_dir = Path(config.get('log_dir', '/var/log/shinobi'))
             logs_dir.mkdir(exist_ok=True)
             
             file_handler = RotatingFileHandler(
-                filename=logs_dir / "cyberwitness.log",
+                filename=logs_dir / "shinobi.log",
                 maxBytes=10 * 1024 * 1024,  # 10 MB
                 backupCount=5,
                 encoding="utf-8"
             )
             file_handler.setFormatter(formatter)
-            
-            # Buforowanie w pamięci
-            self._memory_handler = MemoryHandler(
-                capacity=self._config.get('buffer_size', 1000),
-                target=file_handler,
-                flushLevel=logging.ERROR
-            )
-            self._logger.addHandler(self._memory_handler)
+            self.logger.addHandler(file_handler)
 
-    @staticmethod
-    def _utc_time(*args: Any) -> tuple:
-        return datetime.utcnow().timetuple()
+    def info(self, message: str, *args):
+        self.logger.info(message, *args)
 
-    async def periodic_flush(self) -> None:
-        """Asynchroniczne czyszczenie bufora co 60s."""
-        while True:
-            await asyncio.sleep(60)
-            self._memory_handler.flush()
+    def warning(self, message: str, *args):
+        self.logger.warning(message, *args)
+
+    def error(self, message: str, *args):
+        self.logger.error(message, *args)
