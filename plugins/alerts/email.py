@@ -1,17 +1,19 @@
 import smtplib
+import ssl
 from email.mime.text import MIMEText
 from core.utils.logger import CyberLogger
 
 logger = CyberLogger(__name__)
 
 class EmailNotifier:
-    def __init__(self, smtp_server, smtp_port, sender_email, sender_password):
+    def __init__(self, smtp_server: str, smtp_port: int, sender_email: str, sender_password: str):
+        self.context = ssl.create_default_context()
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.sender_email = sender_email
         self.sender_password = sender_password
 
-    def send_alert(self, recipient_email, subject, body):
+    def send_alert(self, recipient_email: str, subject: str, body: str) -> bool:
         try:
             msg = MIMEText(body)
             msg['Subject'] = subject
@@ -19,8 +21,10 @@ class EmailNotifier:
             msg['To'] = recipient_email
 
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                server.starttls()
+                server.starttls(context=self.context)
                 server.login(self.sender_email, self.sender_password)
-                server.sendmail(self.sender_email, [recipient_email], msg.as_string())
+                server.send_message(msg)
+            return True
         except Exception as e:
-            logger.error(f"Failed to send email alert: {e}")
+            logger.error(f"Email Error: {str(e)}")
+            return False
