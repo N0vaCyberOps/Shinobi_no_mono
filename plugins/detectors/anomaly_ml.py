@@ -1,8 +1,8 @@
 """
-Moduł wykrywania anomalii z wykorzystaniem Isolation Forest.
-Integracja z asynchronicznym pipeline'em danych.
+Moduł wykrywania anomalii z wykorzystaniem Isolation Forest i cache’owaniem.
 """
 
+from functools import lru_cache
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from core.utils.logger import CyberLogger
@@ -10,10 +10,15 @@ from typing import List, Dict
 
 class AnomalyDetector:
     def __init__(self):
-        self._model: IsolationForest = None
+        self._model: Optional[IsolationForest] = None
         self._logger = CyberLogger(__name__)
-        self._features: List[Dict] = []
         self._trained: bool = False
+
+    @staticmethod
+    @lru_cache(maxsize=1024)
+    def _hashable_features(features: tuple) -> np.ndarray:
+        """Konwersja cech do formy hashable dla cache."""
+        return np.array(features)
 
     async def train_model(self, training_data: List[Dict]) -> None:
         """Trenowanie modelu na historycznych danych."""
@@ -25,7 +30,7 @@ class AnomalyDetector:
         )
         self._model.fit(X)
         self._trained = True
-        self._logger.info("Model ML wytrenowany na %d próbek", len(X))
+        self._logger.info(f"Model ML wytrenowany na {len(X)} próbek")
 
     async def detect(self, packet_features: Dict) -> float:
         """Asynchroniczna detekcja anomalii."""
@@ -38,13 +43,5 @@ class AnomalyDetector:
 
     def _preprocess_data(self, raw_data: List[Dict]) -> np.ndarray:
         """Przygotowanie danych dla modelu ML."""
-        # Ekstrakcja kluczowych cech pakietów
-        features = []
-        for entry in raw_data:
-            features.append([
-                entry.get("packet_size", 0),
-                entry.get("protocol_type", 0),
-                entry.get("entropy", 0),
-                entry.get("response_time", 0)
-            ])
-        return np.array(features)
+        features = [self._extract_features(packet) for packet in raw_data]
+        return self._hashable_features(tuple(map(tuple, features)))

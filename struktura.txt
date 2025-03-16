@@ -1,26 +1,39 @@
- 
 ├── core/
 │   ├── __init__.py
 │   ├── network/
 │   │   ├── __init__.py
-│   │   ├── packet_sniffer.py    # Główny moduł przechwytywania
-│   │   └── packet_analyzer.py   # Analiza pakietów
+│   │   ├── packet_sniffer.py          # Sniffer z dynamicznym BPF
+│   │   └── packet_analyzer.py         # Analiza pakietów
 │   ├── security/
 │   │   ├── __init__.py
-│   │   ├── auth.py              # Uwierzytelnianie
-│   │   └── encryption.py        # Szyfrowanie danych
+│   │   ├── auth.py                    # Uwierzytelnianie
+│   │   └── encryption.py              # Szyfrowanie danych
 │   └── utils/
 │       ├── __init__.py
-│       ├── logger.py            # System logowania
-│       └── config_manager.py    # Zarządzanie konfiguracją
+│       ├── logger.py                  # System logowania z buforowaniem
+│       ├── config_manager.py          # Zarządzanie konfiguracją
+│       └── path_handler.py            # Obsługa ścieżek wieloplatformowych
 ├── plugins/
 │   ├── detectors/
 │   │   ├── __init__.py
-│   │   ├── signature_based.py   # Detekcja po sygnaturach
-│   │   └── anomaly_ml.py        # Detekcja anomalii ML
+│   │   ├── signature_based.py         # Detekcja po sygnaturach
+│   │   └── anomaly_ml.py              # Detekcja anomalii ML z cache’owaniem
 │   └── alerts/
 │       ├── __init__.py
-│       ├── slack_notifier.py    # Integracja ze Slack
-│       └── smtp_handler.py      # Obsługa e-mail
-├── requirements.txt
-└── README.md
+│       ├── slack_notifier.py          # Integracja ze Slack (HTTPS)
+│       └── smtp_handler.py            # Obsługa e-mail (SSL/TLS)
+├── tests/
+│   ├── __init__.py
+│   ├── test_network.py                # Testy wydajnościowe
+│   ├── test_performance.py            # Testy pamięci i czasu
+│   └── test_security.py               # Testy bezpieczeństwa
+├── docs/
+│   ├── CONFIG.md                      # Dokumentacja konfiguracji
+│   └── ARCHITECTURE.md                # Opis architektury
+├── scripts/
+│   ├── setup.sh                       # Skrypt instalacyjny
+│   └── docker_build.sh                # Skrypt budowy Docker
+├── Dockerfile                         # Konfiguracja Docker
+├── docker-compose.yml                 # Skalowalne środowisko
+├── requirements.txt                   # Zależności projektu
+└── README.md                          # Dokumentacja główna
