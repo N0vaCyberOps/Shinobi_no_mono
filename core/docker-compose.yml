@@ -1,13 +1,16 @@
 version: '3.8'
 
 services:
-  detector:
-    image: cyberwitness-detector
+  cyberwitness:
     build: .
+    container_name: cyberwitness
     environment:
       - BPF_FILTER=tcp port 80 or 443
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs:/var/log/cyberwitness
     deploy:
-      replicas: 3
       resources:
         limits:
           cpus: '2'
