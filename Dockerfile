@@ -1,23 +1,35 @@
-# For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3-slim
+# Użyj pełnego obrazu Pythona 3.11
+FROM python:3.11
 
-# Keeps Python from generating .pyc files in the container
+# Zapobiegaj tworzeniu plików .pyc w kontenerze
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Turns off buffering for easier container logging
+# Wyłącz buforowanie dla łatwiejszego logowania w kontenerze
 ENV PYTHONUNBUFFERED=1
 
-# Install pip requirements
+# Skopiuj plik requirements.txt do kontenera
 COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
 
+# Zainstaluj zależności Pythona
+RUN python -m pip install --no-cache-dir -r requirements.txt
+
+# Ustaw katalog roboczy na /app
 WORKDIR /app
+
+# Skopiuj cały projekt do kontenera
 COPY . /app
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+# Utwórz użytkownika bez uprawnień roota dla zwiększenia bezpieczeństwa
+RUN adduser --uid 5678 --disabled-password --gecos "" appuser && \
+    chown -R appuser /app
+
+# Przełącz się na użytkownika appuser
 USER appuser
 
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["python", "core\__init__.py"]
+# Ustaw domyślną komendę uruchamiającą aplikację
+CMD ["uvicorn", "core.api:app", "--host", "0.0.0.0", "--port", "8000"]
+FROM python:3.11-slim
+
+
+# Skopiuj CAŁY projekt do kontenera (łącznie z podkatalogami)
+COPY . /app             # Ważne: kropka oznacza bieżący katalog
