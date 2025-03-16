@@ -1,0 +1,9 @@
+# Ściśle zdefiniowane wersje dla reprodukowalności
+scapy==2.5.0
+fastapi==0.103.1
+uvicorn==0.23.2
+aiofiles==23.2.1
+python-jose[cryptography]==3.3.0
+scikit-learn==1.3.0
+python-dotenv==1.0.0
+sqlcipher3==0.4.7
